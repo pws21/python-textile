@@ -122,7 +122,7 @@ class Textile(object):
     }
 
     def __init__(self, restricted=False, lite=False, noimage=False,
-                 auto_link=False, get_sizes=False, html_type='xhtml'):
+                 auto_link=False, get_sizes=False, html_type='xhtml', link_resolver=None, image_resolver=None):
         """Textile properties that are common to regular textile and
         textile_restricted"""
         self.restricted = restricted
@@ -136,6 +136,8 @@ class Textile(object):
         self.rel = ''
         self.html_type = html_type
         self.max_span_depth = 5
+        self.link_resolver = link_resolver
+        self.image_resolver = image_resolver
 
         # We'll be searching for characters that need to be HTML-encoded to
         # produce properly valid html.  These are the defaults that work in
@@ -1182,6 +1184,8 @@ class Textile(object):
         text = self.glyphs(text)
 
         url = self.relURL(url) + slash
+        if self.link_resolver is not None:
+            url = self.link_resolver(url)
         out = '<a href="%s"%s%s>%s</a>' % (self.encode_html(url), atts,
                                            self.rel, text)
 
@@ -1325,6 +1329,9 @@ class Textile(object):
 
         if not title:
             title = ''
+
+        if self.image_resolver is not None:
+            url = self.image_resolver(url)
 
         if not self.isRelURL(url) and self.get_sizes:
             size = imagesize.getimagesize(url)
